@@ -1,0 +1,522 @@
+class TetrisGame {
+   static Array tetrominoDataArr;
+  
+   field  Array  nextTetrominoData;
+   field  Tetromino tetromino, previewTetromino;
+   
+   field  int locationCol, locationRow;
+
+   field  Array mainPanelData;
+   field  int mainPanelDataRows, mainPanelDataCols;
+   field  int mainPanelX, mainPanelY, mainPanelWidth, mainPanelHeight, mainPanelBorder;
+   
+   field  int previewPanelX, previewPanelY, previewWinSize;
+   field  boolean gameOver;
+   field  int speedTime; // 这个值越小速度越快
+
+   field  Random random;
+
+   /** Constructs a new Square Game. */
+   constructor TetrisGame new() {
+
+      let speedTime = 200;
+      let gameOver = false;
+      let random = Random.new(7);
+
+      do initData();
+      do initMainPanel();
+      do initTetrominos();
+      do initPreviewPanel();
+      do initDescriptionPanel();
+
+     // do test();
+      // do Output.moveCursor(0, 0);
+      return this;
+   }
+
+   /** Disposes this game. */
+   method void dispose() {
+      var Array rowData;
+      var int i, j;
+      let i = 0;
+      while(i<mainPanelDataRows){
+         let j=0;
+         while(j<mainPanelDataCols){
+            let rowData = mainPanelData[j];
+            do rowData.dispose();
+            let j= j+1;
+         }
+         let i=i+1;
+      }
+      do mainPanelData.dispose();
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   method void test() {
+      var int x, y;
+      return;
+   }
+
+   method void initTetrominos() {
+      var Array data;
+      var int x, y;
+      
+      let x = mainPanelX + mainPanelBorder ;
+      let y = mainPanelY + mainPanelBorder ;
+
+      let previewTetromino = Tetromino.new(x, y, mainPanelDataRows, mainPanelDataCols);
+
+      let tetromino = Tetromino.new(x, y, mainPanelDataRows, mainPanelDataCols);
+      let tetrominoDataArr = Tetromino.getTetrominoDataArr();
+
+      let nextTetrominoData = randomSelect();
+      do previewTetromino.setData(nextTetrominoData);
+      
+      return;
+
+   }
+
+   method void next() {
+      do tetromino.setData(nextTetrominoData);
+      let locationRow= -tetromino.rows();
+      let locationCol = 4;
+
+      do tetromino.setLocation(locationRow, locationCol);
+      do tetromino.draw();
+
+      // nextTetrominoData是static tetrominoDataArr里的数据作为全局使用，需要一直存在，所以不需要dispose
+      let nextTetrominoData = randomSelect();
+      do previewTetromino.setData(nextTetrominoData);
+      do refreshPreviewPanel();
+      return;
+   }
+
+   method Array randomSelect(){  
+      return tetrominoDataArr[random.nextIntWithBound(7 * 4)];
+   }
+
+   method void initData() {
+      var int i, j, x, y;
+      var Array row;
+
+      let mainPanelDataCols = 10;
+      let mainPanelDataRows = 27;
+
+      let mainPanelData = Array.new(mainPanelDataRows);
+      let i = 0;
+      while(i<mainPanelDataRows){
+         let j=0;
+         let row = Array.new(mainPanelDataCols);
+         while(j<mainPanelDataCols){
+            let row[j] = false;
+            let j= j+1;
+         }
+         let mainPanelData[i]=row;
+         let i=i+1;
+      }
+      return;
+   }
+
+   method void initMainPanel() {
+      var int blockSize;
+      let blockSize = Tetromino.blockSize();
+      let mainPanelBorder=3;
+      let mainPanelWidth  = (blockSize+1) * mainPanelDataCols + (mainPanelBorder * 2) + 1;
+      let mainPanelHeight = (blockSize+1) * mainPanelDataRows + (mainPanelBorder * 2) + 1;
+
+      let mainPanelX = 255;
+      let mainPanelY = 255 - mainPanelHeight;
+
+      do Draw.drawRectangleWithBorder(mainPanelX, mainPanelY, mainPanelWidth, mainPanelHeight, mainPanelBorder);
+      return;
+   }
+
+   method void refreshMainPanel(){
+      var int x, y, row, col;
+      var Array rowData;
+      var int blockSize;
+
+      let blockSize = Tetromino.blockSize();
+      let row = 0;
+      let y = mainPanelY + mainPanelBorder ;
+      while(row < mainPanelDataRows){
+         let col=0;
+         let x = mainPanelX+mainPanelBorder ;
+         let rowData = mainPanelData[row];
+         while(col < mainPanelDataCols){
+            do Tetromino.drawBlock(x, y, rowData[col]);
+            let x=x+blockSize+1;
+            let col= col+1;
+         }
+         let y=y+blockSize+1;
+         let row=row+1;
+      }
+      return;
+   }
+
+   method void checkAndEliminateFullRow(){
+      var int row, col;
+      var Array rowData, preRowData;
+      
+      let row = checkFullRow();
+
+      while(~(row=-1)){
+         while(row > 0){
+            let preRowData = mainPanelData[row-1];
+            let rowData = mainPanelData[row];
+            let col=0;
+            while(col < mainPanelDataCols){
+               let rowData[col]=preRowData[col];
+               let col= col+1;
+            }
+            let row = row-1;
+         }
+
+         let rowData = mainPanelData[0];
+         let col=0;
+         while(col < mainPanelDataCols){
+            let rowData[col]=false;
+            let col= col+1;
+         }
+         do refreshMainPanel();
+         let row = checkFullRow();
+      }
+      return;
+   }
+
+   method int checkFullRow(){
+      var int row , col;
+      var Array rowData;
+
+      let row = mainPanelDataRows;
+      let col=0;
+
+      while((row > 0) & (col < mainPanelDataCols)){
+         let row = row-1;
+         let rowData = mainPanelData[row];
+         let col=0;
+         while((col < mainPanelDataCols) & (rowData[col])){
+            let col= col+1;
+         }
+      }
+
+      if(col < mainPanelDataCols){
+         return -1;
+      } else{
+         return row;
+      }
+   }
+
+   /** Runs the game: handles the user's inputs and moves the square accordingly */
+   method void run() {
+      var int code;
+      var char key;  // the key currently pressed by the user
+      var boolean exit;
+      var int remaindTime;
+      let exit = false;
+      
+      do next();
+      
+      while (~exit ) {
+        // waits for a key to be pressed
+        while ((key = 0) & (~gameOver) ) {
+            do moveDown();
+
+            let remaindTime = speedTime;
+            // 键盘优先原则
+            while((remaindTime>0) & (key=0) ) {
+               let key = Keyboard.keyPressed();
+               do Sys.wait(10);
+               let remaindTime = remaindTime - 10;
+            }
+        }
+
+
+        while ((~(key = 0)) &  (~gameOver) ) {
+         // do Output.printInt(key);
+         //  do Output.printString(" ");
+          let code = 0;
+
+          if (key = 81)  { let exit = true; } // Q key
+
+          // up arrow, W, Enter, I, Blank
+          if ((key = 131) | (key=87) | (key=128) | (key=73) | (key=32) ) { let code = 1; }  
+
+          // down arrow, K, S
+          if ((key = 133) | (key=75) | (key=83) )  { let code = 2; }  
+
+          // left arrow, J, A 
+          if ((key = 130) | (key=74) | (key=65) )  { let code = 3; }  
+
+          // right arrow, L, D
+          if ((key = 132) | (key=76) | (key=68) )  { let code = 4; } 
+
+          if(~(code=0)){
+            do action(code);
+
+            if(code = 2){
+               do Sys.wait(50);
+            } else{
+               do moveDown();
+               do Sys.wait(speedTime);
+            }
+          } else {
+            // unrecognized action
+          }
+
+          let key = Keyboard.keyPressed();
+       }
+     }  
+     return;
+   }
+
+   method boolean action(int code) {
+      if(code=1){
+         return transform(); 
+      } 
+      if (code = 2) {
+         // move down
+          return moveDown();
+      } 
+      if (code = 3) {
+         // move left
+         return moveLeft();
+      } 
+      if (code = 4) {
+         // move right
+         return moveRight();
+      } 
+
+      return false;
+   }
+
+   method boolean moveLeft() {
+      var int nextRow, nextCol;
+
+      // move left
+      let nextRow = locationRow ;
+      let nextCol = locationCol - 1;
+
+      if(~validate(tetromino.data(), nextRow, nextCol)) {
+         return false;
+      }
+
+      let locationRow = nextRow;
+      let locationCol = nextCol;
+
+      do tetromino.moveTo(locationRow, locationCol);
+      return true;
+   }
+
+
+   method boolean moveRight() {
+      var int nextRow, nextCol;
+
+      // move left
+      let nextRow = locationRow ;
+      let nextCol = locationCol + 1;
+
+      if(~validate(tetromino.data(), nextRow, nextCol)) {
+         return false;
+      }
+      
+      let locationRow = nextRow;
+      let locationCol = nextCol;
+      do tetromino.moveTo(locationRow, locationCol);
+      return true;
+   }
+
+   method boolean moveDown() {
+      var int nextRow, nextCol;
+      
+      let nextRow = locationRow + 1;
+      let nextCol = locationCol;
+        
+      if(~validate(tetromino.data(), nextRow, nextCol)) {
+         do fixTetromino(tetromino.data());
+         
+         if(gameOver){
+            do promptGameOver();
+         } else {
+            do checkAndEliminateFullRow();
+            do next();
+         }
+        
+         return false;
+      }
+
+      let locationRow = nextRow;
+      let locationCol = nextCol;
+
+      //do Output.printInt(locationRow);
+     // do Output.printString(" ");
+
+      do tetromino.moveTo(locationRow, locationCol);
+      
+      return true;
+   }
+
+   method boolean transform(){
+      var Array newTetrominoData;
+
+      let newTetrominoData = Tetromino.rotate(tetromino.data());
+      if(~validate(newTetrominoData, locationRow, locationCol)){
+         do newTetrominoData.dispose();
+         return false;
+      }
+
+      do tetromino.erase();
+      do tetromino.setData(newTetrominoData);
+      do newTetrominoData.dispose();
+      do tetromino.draw();
+
+      
+      return true;
+   }
+
+   
+
+   method boolean validate(Array tetrominoData, int locationRow, int locationCol){
+      var int  i, row , col;
+      var Point p;
+      var Array rowData;
+
+      let i=0;
+      while(i < 4) {
+         let p = tetrominoData[i];
+         let row = locationRow+p.y();
+         let col = locationCol+p.x();
+         // 为了实现从top滑出的效果，初始化的row值是负数
+         if( row < 0 ){
+            return true;
+         }
+
+         if(row > (mainPanelDataRows-1) ){
+            return false;
+         }
+         
+         if(col<0 ){
+            return false;
+         }
+         if(col > (mainPanelDataCols-1) ){
+            return false;
+         }
+         // 这个data属于mainPanel， 所以move等一系列方法不方便移动到Teromino.jack里
+         let rowData = mainPanelData[row];
+         if(rowData[col]){
+            return false;
+         }
+         let i=i+1;
+      }
+
+      return true;
+   }
+
+   method void fixTetromino(Array tetrominoData){
+      var int  i, row , col;
+      var Array rowData;
+      var Point p;
+
+      let i=0;
+      while(i < 4) {
+         let p = tetrominoData[i];
+         let row = locationRow+p.y();
+         let col = locationCol+p.x();
+          
+         if(row>0){
+            let rowData = mainPanelData[row];
+            let rowData[col] = true;
+         }
+         
+         if(row<1){
+            let gameOver=true;
+            
+         }
+         let i=i+1;
+      }
+      return;
+   }
+
+   method void promptGameOver() {
+      var int x, y, tipWidth, tipHeight, cursorRow, cursorCol;
+
+      let tipWidth=60;
+      let tipHeight=43;
+
+      let x= (mainPanelWidth-tipWidth)/2 + mainPanelX;
+      let y = mainPanelY+62;
+
+      do Draw.drawRectangleWithBorder(x, y, tipWidth, tipHeight, 1);
+
+      let cursorRow = (y+5)/11+1;
+      let cursorCol = (x+5)/8 + 2;
+      do Output.moveCursor(cursorRow, cursorCol);
+      do Output.printString("GAME");
+      do Output.moveCursor(cursorRow + 1, cursorCol);
+      do Output.printString("OVER");
+      return;
+   }
+
+   method void initDescriptionPanel(){
+      do Output.moveCursor(1, 0);
+      do Output.printString("Press LEFT key to move left");
+      do Output.println();
+      do Output.printString("Press RIGHT key to move right");
+      do Output.println();
+      do Output.printString("Press UP key to transform");
+      do Output.println();
+      do Output.printString("Press DOWN key to speed up");
+      do Output.println();
+      do Output.println();
+      do Output.println();
+      do Output.println();
+      do Output.println();
+      do Output.println();
+      do Output.println();
+      do Output.printString("By ZhengQuan.Wang");
+      return;
+   }
+
+   method void initPreviewPanel(){
+      var int cursorRow, cursorCol;
+
+      let previewWinSize = 60;
+
+      let previewPanelX=  mainPanelX+ mainPanelWidth + 20;
+      let previewPanelY = mainPanelY+ 100;
+
+      let cursorRow = previewPanelY/11-1;
+      let cursorCol = previewPanelX/8;
+
+      do Output.moveCursor(cursorRow, cursorCol);
+      do Output.printString("Next:");
+      
+      do Draw.drawRectangleWithBorder(previewPanelX, previewPanelY, previewWinSize, previewWinSize, 2);
+      return;
+   }
+
+   method void refreshPreviewPanel(){
+      var  int previewX, previewY;
+
+      if(~(tetromino=null)) {
+         let previewX = (previewWinSize-tetromino.width())/2 + previewPanelX;
+         let previewY = (previewWinSize-tetromino.height())/2 + previewPanelY;
+         do Tetromino.drawTetromino( previewX, previewY ,  tetromino.data(), false) ;
+      }
+
+      if(~(previewTetromino=null)) {
+         let previewX = (previewWinSize-previewTetromino.width())/2 + previewPanelX;
+         let previewY = (previewWinSize-previewTetromino.height())/2 + previewPanelY;
+         do Tetromino.drawTetromino( previewX, previewY ,  previewTetromino.data(), true) ;
+      }
+      return;
+
+   }
+   
+
+    
+}
+
+
+

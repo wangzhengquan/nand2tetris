@@ -1,0 +1,38 @@
+class Test {
+	function void main() {
+      do Output.printInt(-1);
+      return;
+   }
+
+   function int testIfElse() {
+   		var int i;
+   		let i = 0;
+   		if(i<0){
+   			return -1;
+   		} else {
+   			return 1;
+   		}
+   }
+
+   function int testIf() {
+   		var int i;
+   		let i = 0;
+   		if(i<0){
+   			return -1;
+   		}  
+
+   		return 0;
+   }
+
+    
+
+   function int testWile() {
+   		var int i;
+   		let i = 0;
+   		while(i<10){
+   			let i=i+1;
+   		} 
+   		return i; 
+   }
+
+}

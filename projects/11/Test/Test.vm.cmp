@@ -1,0 +1,58 @@
+function Test.main 0
+push constant 1
+neg
+call Output.printInt 1
+pop temp 0
+push constant 0
+return
+function Test.testIfElse 1
+push constant 0
+pop local 0
+push local 0
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 1
+neg
+return
+goto IF_END0
+label IF_FALSE0
+push constant 1
+return
+label IF_END0
+
+function Test.testIf 1
+push constant 0
+pop local 0
+push local 0
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 1
+neg
+return
+label IF_FALSE0
+push constant 0
+return
+
+function Test.testWile 1
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push constant 10
+lt
+not
+if-goto WHILE_END0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return

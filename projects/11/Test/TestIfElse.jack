@@ -1,0 +1,79 @@
+ 
+class TestIfElse {
+
+  function void run() {
+    do TestIfElse.testIfElse();
+    do TestIfElse.testIf();
+    return;
+  }
+
+  function void testElseIf() {
+    var int a;
+    while(true){
+      let a = Keyboard.readInt("Enter a number: ");
+      if(a=0){
+        do Output.printInt(0);
+        do Output.println();
+      } else if(a=1){
+        do Output.printInt(1);
+        do Output.println();
+      } else if(a=2){
+        do Output.printInt(2);
+        do Output.println();
+      } else if(a=3){
+        do Output.printInt(3);
+        do Output.println();
+      } else{
+        do Output.printString("Other than 0, 1, 2, 3");
+        do Output.println();
+      }
+    }
+    return;
+  }
+
+
+   function void testIfElse() {
+      var int i;
+      let i = -1;
+      do Output.println();
+      do Output.printString("testIfElse");
+      do Output.println();
+      if(i<0){
+          do Output.printString("i<0");
+      } else {
+          do Output.printString("not i<0");
+      }
+      do Output.println();
+      return;
+   }
+
+   function void testIf() {
+      var int i;
+      let i = 1;
+      do Output.println();
+      do Output.printString("testIf");
+      do Output.println();
+      if(i<0){
+          do Output.printString("i<0");
+      }  
+      do Output.println();
+
+      return ;
+   }
+
+    
+
+  function void testWhile() {
+    var int i;
+    let i = 0;
+    do Output.println();
+    do Output.printString("testWhile");
+    do Output.println();
+    while(i<10){
+        let i=i+1;
+    } 
+    do Output.printInt(i);
+    do Output.println();
+    return ; 
+  }
+}

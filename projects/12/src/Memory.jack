@@ -1,0 +1,333 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+
+  static Array heap;
+  // static int ALIGNMENT;
+  static int heapStart;
+  static int HEAP_LENGTH;
+  static int prologue, epilogue;
+  static int MIN_BLOCK_SIZE;
+
+  /** Initializes the class. */
+  function void init() {
+    var int freeBlockSize, prologueSize, epilogueSize;
+    var in freeBlock;
+    let MIN_BLOCK_SIZE = 5;
+    let heap = 2048;
+
+    let heapStart = 2048;
+    let HEAP_LENGTH = 14336;
+
+    //prologue
+    let prologue = 2;
+    let prologueSize = MIN_BLOCK_SIZE;
+    do Memory.setBlockHeaderFooter(prologue, prologueSize, true);
+    do Memory.setSuccessorBlock(prologue, prologue);
+    do Memory.setPredecessorBlock(prologue, prologue);
+
+    // do Memory.checkPrologue();
+
+    //epilogue
+    let epilogueSize = 2;
+    let epilogue = HEAP_LENGTH;
+    let heap[epilogue-2] = 0; //size
+    let heap[epilogue-1] = true;
+
+    // do Output.printInt(epilogue+1);
+    // do Output.println();
+
+    // free block
+    let freeBlockSize = HEAP_LENGTH - prologueSize - epilogueSize;
+    let freeBlock = prologueSize  + 2;
+    do Memory.setBlockHeaderFooter(freeBlock, freeBlockSize, false); 
+    do Memory.coalesce(freeBlock);
+     
+    return ;
+  }
+
+  /** Returns the RAM value at the given address. */
+  function int peek(int address) {
+    var Array arr;
+    let arr=0;
+    return arr[address];
+  }
+
+  /** Sets the RAM value at the given address to the given value. */
+  function void poke(int address, int value) {
+    var Array arr;
+    let arr = 0;
+    let arr[address] = value;
+    return;
+  }
+
+  /** Finds an available RAM block of the given size and returns
+    *  a reference to its base address. */
+  function int alloc(int size) {
+    var int newsize, block;
+    /* Ignore spurious requests */
+    if (size = 0){
+      return 0;
+    }
+    /*
+    * Since the predecessor and successor reside in the payload for free list,  
+    * the size of payload was at least two PTR_SIZE.
+    */
+    if(size < 2){
+      let size = 2;
+    }
+   /* 
+    * the allocator must adjust the requested block size to allow room for the header and the footer,  
+    * and to satisfy the  alignment requirement. 
+    */
+    let newsize = size +  3 ;
+    let block = Memory.findFit(newsize);
+    /* Search the free list for a fit */
+    if (~(block=0))
+    {
+      return heapStart + Memory.place(block, newsize);
+    } else{
+      do Output.printString("alloc error, can not find a fit block");
+      do Output.println();
+      return 0;
+    }
+  }
+
+  /** De-allocates the given object (cast as an array) by making
+    *  it available for future allocations. */
+  function void deAlloc(int pt) {
+    var int block, size;
+    if (pt = 0){
+      return;
+    }
+    /*
+    *if (!is_allocated(ptr) ) {
+    *  printf("Free error: %p is not a allocated block\n", ptr);
+    *  return;
+    *}
+    */
+    let block = pt - heapStart;
+    do Memory.setBlockAlloc(block, false);
+    do Memory.coalesce(block);
+    return;
+  } 
+
+  function int place(int block, int size){
+    var int csize ;
+    let csize = Memory.getBlockSize(block);
+    if ((csize - size) < MIN_BLOCK_SIZE )
+    {
+      do Memory.setBlockHeaderFooter(block, csize , true);
+      do Memory.rmFblock(block);
+    } else {
+      do Memory.setBlockHeaderFooter(block, csize - size, false);
+      let block = Memory.nextBlock(block);
+      do Memory.setBlockHeaderFooter(block, size, true);
+    }
+    return block;
+  }
+    
+
+  function int findFit(int size){
+    var int block;
+    // do Output.printInt(size);
+    // do Output.println();
+    let block = Memory.successorBlock(prologue);
+    while(~(block=prologue)){
+      if( (size < Memory.getBlockSize(block)) | (size = Memory.getBlockSize(block)) ){
+        return block;
+      }
+      let block = Memory.successorBlock(block);
+    }
+    return 0;   /* No fit */  
+  }
+ 
+    
+    
+  function void setBlockHeaderFooter(int block, int size, boolean alloc) {
+    // HEADER
+    let heap[block-2]=size; 
+    let heap[block-1]=alloc;  
+    // FOOTER
+    let heap[block+size-3]=size; 
+    return;  
+  }
+
+  function void setBlockAlloc(int block, boolean alloc) {
+    let heap[block-1]=alloc;  
+    return;  
+  }
+
+  function boolean getBlockAlloc(int block){
+    return heap[block-1];
+  }
+
+  function int getBlockSize(int block) {
+    return heap[block-2];  
+  }
+  function int nextBlock(int block) {
+    return block + Memory.getBlockSize(block);
+  }
+
+  function int preBlock(int block) {
+    return block - heap[block-3];
+  }
+
+  function void setSuccessorBlock(int block, int succ){
+    let heap[block+1] = succ;
+    return;
+  }
+
+  function void setPredecessorBlock(int block, int pre){
+    let heap[block] = pre;
+    return;
+  }
+
+  function int successorBlock(int block){
+    return heap[block+1] ;
+  }
+
+  function int predecessorBlock(int block){
+    return heap[block] ;
+  }
+
+
+  function int coalesce(int block){
+    var int preBlock, nextBlock, size;
+    var boolean preAlloc, nextAlloc;
+    let preBlock = Memory.preBlock(block);
+    let nextBlock = Memory.nextBlock(block);
+    let preAlloc = Memory.getBlockAlloc(preBlock);
+    let nextAlloc = Memory.getBlockAlloc(nextBlock);
+    let size = Memory.getBlockSize(block);
+    // do Output.printInt(nextBlock);
+    // do Output.println();
+    // do Output.printInt(preAlloc);
+    // do Output.println();
+    // do Output.printInt(nextAlloc);
+    // do Output.println();
+    /* Case 1 */
+    /*The previous and next blocks are both allocated.*/
+    if (preAlloc & nextAlloc)
+    {
+      do Memory.insertFblock(block);
+      return block;
+    }
+    /* Case 2 */
+    /*The previous block is allocated and the next block is free.*/
+    if (preAlloc & (~nextAlloc))
+    {
+      let size = size + Memory.getBlockSize(nextBlock);
+      do Memory.setBlockHeaderFooter(block, size, false);
+
+      do Memory.rmFblock(nextBlock);
+      do Memory.insertFblock(block);
+      return block;
+    }
+    /* Case 3 */
+    /*The previous block is free and the next block is allocated.*/
+      if (~preAlloc & nextAlloc)
+    {
+      let size = size + Memory.getBlockSize(preBlock);
+      do Memory.setBlockHeaderFooter(preBlock, size, false);
+      let block = preBlock;
+      return block;
+    }
+    /* Case 4 */
+    /*The previous and next blocks are both free.*/
+    let size = size + Memory.getBlockSize(preBlock) + Memory.getBlockSize(nextBlock);
+    do Memory.setBlockHeaderFooter(preBlock, size, false);
+    let block = preBlock;
+    do Memory.rmFblock(nextBlock);
+    return block;
+  } 
+
+  /**
+  * remove a block form free linked-list
+  */
+  function void rmFblock(int block){
+    // the successor of the previous block of rbp point to next block of rbp
+    do Memory.setSuccessorBlock(Memory.predecessorBlock(block), Memory.successorBlock(block));
+    // the predecessor of the next block of rbp point to previous block of rbp
+    do Memory.setPredecessorBlock(Memory.successorBlock(block), Memory.predecessorBlock(block));
+    return;
+  }
+
+  /*
+  * Insert a free block to thre free linked-list
+  * */
+  function void insertFblock(int block) {
+    // insert into the header of the free list
+    do Memory.setSuccessorBlock(block, Memory.successorBlock(prologue));
+    do Memory.setPredecessorBlock(Memory.successorBlock(prologue), block);
+    do Memory.setSuccessorBlock(prologue, block);
+    do Memory.setPredecessorBlock(block, prologue);
+    return;
+  }
+
+  // ==============================================================================
+  function void checkPrologue () {
+    
+    do Output.printInt( (heap[0]=MIN_BLOCK_SIZE)) ;
+    do Output.println();
+    do Output.printInt( (heap[1]=true));
+    do Output.println();
+    do Output.printInt( (heap[2]=2)) ;
+    do Output.println();
+    do Output.printInt( (heap[3]=2)) ;
+    do Output.println();
+    do Output.printInt( (heap[4]=MIN_BLOCK_SIZE)) ;
+    do Output.println();
+   
+    return;
+  }
+
+  function void checkBlockList(){
+    var int block, size;
+    let block = prologue;
+    while(block<HEAP_LENGTH){
+      do Output.printInt(block) ;
+      do Output.println();
+      let size = Memory.getBlockSize(block);
+      let block = block + size;
+    }
+
+    do Output.printInt( block) ;
+    do Output.println();
+    return;
+  }
+
+  function void checkFreeLinkList() {
+    var int block;
+    // do Output.printInt(size);
+    // do Output.println();
+    let block = Memory.successorBlock(prologue);
+    while(~(block=prologue)){
+      do Output.printInt(block);
+      do Output.println();
+      let block = Memory.successorBlock(block);
+    }
+    return;
+  }
+
+  function void check() {
+    do Memory.checkPrologue();
+    return;
+  }
+
+  function void printError(String str) {
+    do Output.printString(str);
+    do Output.println();
+    do str.dispose();
+    return;
+  }
+
+}

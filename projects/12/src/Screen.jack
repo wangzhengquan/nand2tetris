@@ -1,0 +1,212 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * A library of functions for displaying graphics on the screen.
+ * The Hack physical screen consists of 256 rows (indexed 0..255, top to bottom)
+ * of 512 pixels each (indexed 0..511, left to right). The top left pixel on 
+ * the screen is indexed (0,0).
+ */
+class Screen {
+
+    static int baseAddr;
+    static boolean color;
+    static Array maskArr;
+    /** Initializes the Screen. */
+    function void init() {
+      let baseAddr = 16384;
+      let color = true;
+      do Screen.initMaskArray();
+      return;
+    }
+
+    function void initMaskArray() {
+      var int i, val;
+      let maskArr = Array.new(16);
+      let i = 0;
+      let val = 1;
+      while(i < 16){
+        let maskArr[i] = val;
+        let val = val + val;
+        let i = i+1;
+      }
+      return;
+
+    }
+
+    function int getMask(int i){
+      return maskArr[i];
+    }
+
+
+    /** Erases the entire screen. */
+    function void clearScreen() {
+      var int i;
+      let i=0;
+      while(i < 8192){
+        do Memory.poke(baseAddr+i, 0);
+      }
+      return;
+    }
+
+    /** Sets the current color, to be used for all subsequent drawXXX commands.
+     *  Black is represented by true, white by false. */
+    function void setColor(boolean b) {
+      let color = b;
+      return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+      var int address, value, q, r;
+
+      let q = x/16;
+      let r = x - (q*16);
+      let address = baseAddr+ (32*y) + q;
+
+      let value =  Memory.peek(address) & ~Screen.getMask(r) | (color &  Screen.getMask(r))  ;
+      do Memory.poke(address, value);
+       
+      return;
+    }
+
+    /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+      var int dx, dy,  diff, xstep, ystep, x, y;
+      let dx = x2-x1;
+      let dy = y2-y1;
+      // let row = 0;
+      // let col = 0;
+      let diff = 0;
+      let x = x1;
+      let y = y1;
+      let xstep = 1;
+      let ystep = 1;
+      if(dx<0){
+        let xstep = -1;
+        let dx = -dx;
+      }
+      if(dy<0){
+        let ystep = -1;
+        let dy = -dy;
+      }
+      if(dx=0){
+        // vertical line
+        while(~(y=(y2 + 1))){
+          do Screen.drawPixel(x, y);
+          let y = y+ystep;
+        }
+        return;
+      }
+      if(dy=0){
+        // vertical line
+        while(~(x=(x2 + 1))){
+          do Screen.drawPixel(x, y);
+          let x = x + xstep;
+        }
+        return;
+      }
+      while(~(x = (x2+1)) & ~(y = (y2+1)) ){
+        if( ~(diff<0)){
+          do Screen.drawPixel(x, y);
+        }
+        
+        
+        // do Output.printInt(x);
+        // do Output.printString(" ");
+        // do Output.printInt(y);
+        // do Output.println();
+
+        if(diff < 0 ){
+          let x = x + xstep;
+          let diff = diff+dy;
+        } else {
+          let y = y + ystep;
+          let diff = diff-dx;
+        }
+      }
+      return;
+    }
+
+ 
+
+    /** Draws a filled rectangle whose top left corner is (x1, y1)
+     * and bottom right corner is (x2,y2), using the current color. */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+      var int y;
+      let y = y1;
+      while(y<(y2+1)){
+        do Screen.drawLine(x1, y, x2, y);
+        let y=y+1;
+      }
+      return;
+    }
+
+    /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
+    function void drawCircle(int x, int y, int r) {
+      do Screen.drawCircle1(x, y,  r);
+      return;
+    }
+    function void drawCircle1(int x, int y, int r) {
+      var int dx, dy;
+      if(r>181){
+        do Output.printString("r must be less than 181");
+        return;
+      }
+      let dy = -r;
+      while(dy < (r+1)){
+        let dx = Math.sqrt( (r*r)-(dy*dy)); 
+        do Screen.drawLine(x-dx, y+dy, x+dx, y+dy);
+        let dy=dy+1;
+      }
+      return;
+    }
+
+    function void drawCircle2(int x, int y, int r) {
+      var int dx, dy, pdx, pdy;
+      if(r>181){
+        do Output.printString("r must be less than 181");
+        return;
+      }
+      let pdx = -1;
+      let dy = -r;
+      while(dy < (r+1)){
+        let dx = Math.sqrt( (r*r)-(dy*dy)); 
+        if(~(pdx=dx) ){
+          do Screen.drawLine(x-dx, y+dy, x+dx, y+dy);
+          do Screen.drawRectangle(x-dx, y-dy, x+dx, y+dy);
+          let pdx=dx;
+        }
+              
+       
+ 
+        // do Output.printInt(dy);
+        // do Output.printString(" ");
+        // do Output.printInt(dx);
+        // do Output.println();
+        let dy=dy+1;
+      }
+
+      let pdy = -1;
+      let dx = -r;
+      while(dx < (r+1)){
+        let dy = Math.sqrt( (r*r)-(dx*dx)); 
+        if(~(pdy=dy) ){
+          do Screen.drawLine(x+dx, y+dy, x+dx, y-dy);
+          let pdy=dy;
+        }      
+       
+ 
+        // do Output.printInt(dy);
+        // do Output.printString(" ");
+        // do Output.printInt(dx);
+        // do Output.println();
+        let dx=dx+1;
+      }
+
+     // do Screen.drawCircle1(x, y,  r);
+      return;
+    }
+}

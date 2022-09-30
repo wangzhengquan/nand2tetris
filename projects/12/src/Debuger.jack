@@ -1,0 +1,17 @@
+class Debuger{
+  function void debug(String name, int value) {
+    var String  equal;
+    let equal = String.new(1);
+    do equal.appendChar(61);
+    do Output.printString(name);
+    do Output.printString(equal);
+    do Output.printInt(value);
+    do Output.println();
+     
+    do name.dispose();
+    do equal.dispose();
+    return;
+  }
+  
+
+}

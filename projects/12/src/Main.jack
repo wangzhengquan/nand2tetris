@@ -1,0 +1,180 @@
+class Main {
+  function void main() {
+    
+    do Main.testKeyboard();
+
+
+    return;
+  }
+
+
+  function void test() {
+    var boolean b;
+    let b = 2;
+    if(b){
+      do Output.printString("true");
+    } else {
+      do Output.printString("false");
+    }
+    return;
+  }
+
+  function void testKeyboard() {
+    var String str;
+    while(true){
+      let str= Keyboard.readLine("hello:");
+      do Output.printString("echo :");
+      do Output.printString(str);
+      do Output.println();
+      do str.dispose();
+    }
+    return;
+  }
+
+  function void testOutput(){
+    do Output.printChar(65);
+    do Output.printChar(66);
+    do Output.printChar(67);
+    do Output.printChar(68);
+    do Output.printChar(69);
+    do Output.printString("Hello World!");
+    do Output.printInt(123);
+    do Output.println();
+    do Output.printString("Hello World 2!");
+    do Output.println();
+    do Output.printString("Hello World 3!");
+    return;
+  }
+
+  function void testScreen() {
+  //  do Screen.clearScreen();
+    do Screen.setColor(true);
+     
+    do Screen.drawCircle(100, 100, 5);
+    do Screen.drawCircle(50, 50, 20);
+
+    // do Screen.drawRectangle(150, 100, 200, 150);
+    // do Screen.drawLine(10, 10,  100, 110);
+    // do Screen.drawLine( 0, 0, 200, 160 );
+    // do Screen.drawLine(110, 100, 10, 10);
+    // do Screen.drawLine(10, 10,  10, 250);
+    // do Screen.drawLine(10, 10,  200, 10);
+
+
+    return;
+  }
+
+  
+
+  function void checkMath() {
+    // do Output.printInt(Math.multiply(3, 4));
+    // do Output.println();
+    // do Output.printInt(Math.multiply(7, 9));
+    // do Output.println();
+
+    // do Output.printInt(Math.divide(9, 3));
+    // do Output.println();
+    // do Output.printInt(Math.divide(10, 3));
+    // do Output.println();
+
+    do Output.printInt(Math.sqrt(9));
+    do Output.println();
+    do Output.printInt(Math.sqrt(10));
+    do Output.println();
+    
+    return;
+  }
+
+  function void checkString() {
+    var String s;
+    let s = String.new(6);  
+      
+    do s.dispose();
+    return;
+  }
+
+  function void checkMemory() {
+    //do Debuger.debug("Hello", 1);
+    // do Main.test1();
+   // do Main.test2();
+    
+    // do Main.checkLinkList();
+   // do Main.checkBlockList();
+    return;
+  }
+
+  function void testMemory2() {
+    var int i;
+    let i=0;
+    while(i< 30000){
+      do Debuger.debug("Hello", i);
+      let i=i+1;
+    }
+    return;
+  }
+
+  function void testMemory1() {
+    var int a;
+    let a= Memory.alloc(10);
+    do Output.printInt(a);
+    do Memory.deAlloc(a);
+    do Output.printString("hello");
+    return;
+  }
+
+  function void checkLinkList() {
+    var int pt1, pt2, pt3, pt4;
+    let pt1= Memory.alloc(10);
+    let pt2 = Memory.alloc(10);
+    let pt3 = Memory.alloc(10);
+    let pt4 = Memory.alloc(10);
+    do Memory.deAlloc(pt1);
+    do Memory.deAlloc(pt3);
+
+    // do Memory.deAlloc(pt2);
+    // do Memory.deAlloc(pt4);
+    
+    do Memory.checkFreeLinkList();
+
+    // pt1 pt3 occur in the free list
+    do Output.println();
+    do Output.println();
+    do Output.printInt(pt1-2048);
+    do Output.println();
+    do Output.printInt(pt3-2048);
+    do Output.println();
+    return;
+  }
+
+
+  function void checkBlockList() {
+     
+    var int pt1, pt2, pt3, pt4;
+    let pt1= Memory.alloc(10);
+    let pt2 = Memory.alloc(10);
+    let pt3 = Memory.alloc(10);
+    let pt4 = Memory.alloc(10);
+    do Memory.deAlloc(pt1);
+    do Memory.deAlloc(pt3);
+
+    // do Memory.deAlloc(pt2);
+    // do Memory.deAlloc(pt4);
+    
+    do Memory.checkBlockList();
+
+    // pt1  pt2 pt3 pt4 occur in the block list
+    do Output.println();
+    do Output.println();
+    do Output.printInt(pt1-2048);
+    do Output.println();
+    do Output.printInt(pt2-2048);
+    do Output.println();
+    do Output.printInt(pt3-2048);
+    do Output.println();
+    do Output.printInt(pt4-2048);
+    do Output.println();
+    return;
+  }
+  
+  
+}

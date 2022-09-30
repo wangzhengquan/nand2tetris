@@ -1,0 +1,21 @@
+class Main {
+  function void main() {
+    
+     
+     do Main.testKeyboard();
+    return;
+  }
+
+
+  function void testKeyboard() {
+    var String str;
+    while(true){
+      let str= Keyboard.readLine("hello:");
+      do Output.printString("echo :");
+      do Output.printString(str);
+      do Output.println();
+      do str.dispose();
+    }
+    return;
+  }
+}

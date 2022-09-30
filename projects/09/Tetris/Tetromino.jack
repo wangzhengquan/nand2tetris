@@ -1,0 +1,400 @@
+class Tetromino {
+   field int locationRow, locationCol;  
+   field Array data;
+   field int frameX, frameY, frameRows, frameCols;
+   static Array tetrominoDataArr;
+
+   /** Constructs a new square with a given location and size. */
+   constructor Tetromino new( int _frameX, int _frameY, int _frameRows, int _frameCols) {
+       
+      let frameX = _frameX;
+      let frameY = _frameY;
+      let frameRows = _frameRows;
+      let frameCols = _frameCols;
+
+      let data = Array.new(4);
+      return this;
+   }
+
+   /** Disposes this square. */
+   method void dispose() {
+      var int i;
+      var Point p;
+
+      let i = 0;
+      while(i<4){
+         let p = data[i];
+         do p.dispose();
+         let i=i+1;
+      }
+      do data.dispose();
+       
+
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   method Array data() {
+       return data;
+   }
+
+   method void setData(Array newdata){
+      var int i;
+      let i = 0;
+      while(i<4) {
+         let data[i] =  newdata[i];
+         let i=i+1;
+      }
+      return;
+   }
+
+   method int cols(){
+      return Tetromino.colsOfData(data);
+   }
+
+   method int rows(){
+      return Tetromino.rowsOfData(data);
+   }
+
+   method int width(){
+      return Tetromino.widthOfData(data);
+   }
+
+   method int height(){
+      return Tetromino.heightOfData(data);
+   }
+   
+   method void setLocation(int row, int col) {
+
+      let locationRow = row;
+      let locationCol = col;
+      return;
+   }
+
+   method void moveTo(int row, int col) {
+
+      do erase();
+      let locationRow = row;
+      let locationCol = col;
+      do draw();
+      return;
+   }
+
+   method void erase() {
+     do  _draw_(false);
+     return;
+   }
+
+   method void draw() {
+      do  _draw_(true);
+      return;
+   }
+
+   method void _draw_(boolean color) {
+      var Point p;
+      var int i, row, col, x, y;
+      var int blockSize;
+      let blockSize = Tetromino.blockSize();
+
+
+      let i = 0;
+      while(i<4){
+         let p = data[i];
+         let col = (locationCol+p.x());
+         let row = (locationRow+p.y());
+         let x = col * (blockSize+1) + frameX;
+         let y = row * (blockSize+1) + frameY;
+
+         if( (col>-1) & (col<frameCols) & (row>-1) & (row<frameRows)){
+            do Tetromino.drawBlock(x , y, color);
+         }
+         
+         let i=i+1;
+      }
+
+      return;
+   }
+
+   // data里数据点中x的最大值
+   function int colsOfData(Array data){
+      var int i, maxX;
+      var Point p;
+
+      let i = 1;
+      let p=data[0];
+      let maxX = p.x();
+      while( i < 4 ){
+         let p = data[i];
+         if(p.x() > maxX) {
+            let maxX=p.x();
+         }
+         let i=i+1;
+      }
+      return maxX+1;
+   }
+
+   // data里数据点中y的最大值
+   function int rowsOfData(Array data){
+      var int i, maxY;
+      var Point p;
+
+      let i = 1;
+      let p=data[0];
+      let maxY = p.y();
+      while( i < 4 ){
+         let p = data[i];
+         if(p.y() > maxY) {
+            let maxY=p.y();
+         }
+         let i=i+1;
+      }
+      return maxY+1;
+   }
+
+   // 绘制该data所占的宽度
+   function int widthOfData(Array data){
+      return Tetromino.colsOfData(data) * (Tetromino.blockSize()+1) + 1;
+   }
+
+   // 绘制该data所占的高度
+   function int heightOfData(Array data){
+      return Tetromino.rowsOfData(data) * (Tetromino.blockSize()+1) + 1;
+   }
+
+   function Array rotate(Array oldData) {
+      var Array newData;
+      var int i;
+      var Point p;
+      var int x, y;
+      // origin point, rotate around this point, every point should sub this value
+      var int originY;
+      
+      let originY = Tetromino.rowsOfData(oldData)-1;
+      let newData = Array.new(4);
+
+      let i = 0;
+      while(i<4){
+         // do Output.printInt(origin[1]);
+         let p = oldData[i];
+         // do Output.printString("(");
+         // do Output.printInt(p.x());
+         // do Output.printString(",");
+         // do Output.printInt(p.y());
+         // do Output.printString(")=>");
+
+         // rotate around (0, originY) => move origin to (0, originY) => sub every point of (0, originY) 
+         let x=p.x();
+         let y=p.y() - originY;
+
+         // do Output.printString("(");
+         // do Output.printInt(x);
+         // do Output.printString(",");
+         // do Output.printInt(y);
+         // do Output.printString(")=>");
+
+         
+         // rotate  90 degree
+         let newData[i]=Point.new(-y, x);
+         
+         // do Output.printString("(");
+         // do Output.printInt(p.x());
+         // do Output.printString(",");
+         // do Output.printInt(p.y());
+         // do Output.printString(") ");
+         let i=i+1;
+      }
+      
+       
+      return newData;
+   }
+
+   function int blockSize() {
+      return 8;
+   }
+
+   function void drawBlock(int x, int y, boolean color) {
+      var int blockSize;
+      let blockSize = Tetromino.blockSize();
+
+      do Screen.setColor(false);
+      do Draw.drawHorizontalLine(x, y, blockSize);      // top
+      do Draw.drawHorizontalLine(x, y+blockSize+1, blockSize);  // bottom
+      do Draw.drawVerticalLine(x, y, blockSize);      // left
+      do Draw.drawVerticalLine(x+blockSize+1, y, blockSize);  // right
+
+      do Screen.setColor(color);
+      do Draw.drawRectangle(x+1, y+1, blockSize, blockSize);
+      return;
+   }
+
+
+   function void drawTetromino(int x, int y, Array data, boolean color) {
+       var Point p;
+       var int i;
+
+       let i = 0;
+       while(i<4){
+          let p = data[i];
+          do Tetromino.drawBlock(x+(p.x() * 9), y+(p.y() * 9), color);
+          let i=i+1;
+       }
+
+       return;
+   }
+
+
+   function Array getTetrominoDataArr(){
+
+      var Array data;  // tetromino data
+      var int i, j;
+
+      if(~(tetrominoDataArr=null)){
+         return tetrominoDataArr;
+      }
+
+
+      let tetrominoDataArr = Array.new(7*4);
+      let i = 0;
+
+
+      // 1 T
+      let data = Array.new(4);
+      let data[0]=Point.new(1,0);
+      let data[1]=Point.new(0, 1);
+      let data[2]=Point.new(1, 1);
+      let data[3]=Point.new(2,1);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      // 2 square
+      let data = Array.new(4);
+      let data[0]=Point.new(0, 0);
+      let data[1]=Point.new(1, 0);
+      let data[2]=Point.new(0, 1);
+      let data[3]=Point.new(1, 1);
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      // 3 straight
+      let data = Array.new(4);
+      let data[0]=Point.new(0, 0);
+      let data[1]=Point.new(0, 1);
+      let data[2]=Point.new(0, 2);
+      let data[3]=Point.new(0, 3);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+       // 4 Z
+      let data = Array.new(4);
+      let data[0]=Point.new(1, 0);
+      let data[1]=Point.new(0, 1);
+      let data[2]=Point.new(1, 1);
+      let data[3]=Point.new(0, 2);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      // 5 J 
+      let data = Array.new(4);
+      let data[0]=Point.new(1, 0);
+      let data[1]=Point.new(1, 1);
+      let data[2]=Point.new(0, 2);
+      let data[3]=Point.new(1, 2);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      // 6 s
+      let data = Array.new(4);
+      let data[0]=Point.new(2, 0);
+      let data[1]=Point.new(1, 0);
+      let data[2]=Point.new(0, 1);
+      let data[3]=Point.new(1, 1);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      // 7 L
+      let data = Array.new(4);
+      let data[0]=Point.new(0, 0);
+      let data[1]=Point.new(0, 1);
+      let data[2]=Point.new(0, 2);
+      let data[3]=Point.new(1, 2);
+
+      let tetrominoDataArr[i]=data;
+
+      let i = i + 1;
+      let j = 0;
+      while(j < 3) {
+         
+         let data = Tetromino.rotate(data);
+         let tetrominoDataArr[i] = data;
+         let j=j+1;
+         let i = i + 1;
+      }
+
+      return tetrominoDataArr;
+
+   }
+
+
+
+
+   
+}

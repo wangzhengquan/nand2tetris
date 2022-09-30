@@ -1,0 +1,55 @@
+function Main.main 0
+call Main.testKeyboard 0
+pop temp 0
+push constant 0
+return
+function Main.testKeyboard 1
+label WHILE_EXP0
+push constant 0
+not
+not
+if-goto WHILE_END0
+push constant 6
+call String.new 1
+push constant 104
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 108
+call String.appendChar 2
+push constant 108
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+call Keyboard.readLine 1
+pop local 0
+push constant 6
+call String.new 1
+push constant 101
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 104
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push local 0
+call Output.printString 1
+pop temp 0
+call Output.println 0
+pop temp 0
+push local 0
+call String.dispose 1
+pop temp 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return

@@ -1,0 +1,30 @@
+class Random {
+    field int x, a, c, m;  
+  
+    constructor Random new(int seed) {
+      let x = seed;
+      let c = 0;
+      // 1 << 15 - 1
+      let m = 32767;
+      let a = 16807;
+
+      return this;
+    }
+
+   // x_n+1 = (a*x_n + c) mod m
+    method int nextInt(){
+      let x = (a * x + c) & m;
+      return x;
+    }
+
+    method int nextIntWithBound(int bound){
+       
+      return Number.mod(nextInt(), bound);
+    }
+   
+   /** Disposes this square. */
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+}

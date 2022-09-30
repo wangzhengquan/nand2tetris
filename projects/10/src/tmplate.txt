@@ -1,0 +1,14 @@
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+printWriter.println("");
+
+throw new SyntaxError(tokenizer.row(), tokenizer.col());

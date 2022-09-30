@@ -1,0 +1,109 @@
+class Draw {
+
+
+  function void drawRectangle(int x, int y, int width, int height){
+    if((width=0) | (height=0) ){
+        return;
+     }
+  	do Screen.drawRectangle(x, y, x + width - 1, y + height - 1);
+  	return;
+  }
+
+   
+
+  function void drawRectangleWithBorder(int x, int y, int width, int height, int border){
+  	do Screen.setColor(true);
+    // top horizontal
+    do Draw.drawRectangle(x, y, width, border);
+     
+    // bottom horizontal
+    do Draw.drawRectangle(x, y+height-border, width, border);
+
+    // left vertical
+    do Draw.drawRectangle(x, y, border,  height);
+    
+    // right vertical
+    do Draw.drawRectangle(x+width-border, y, border,  height);
+
+    do Screen.setColor(false);
+		do Draw.drawRectangle(x+border, y+border, width-(2*border), height-(2*border));
+  	return;
+  }
+
+
+  function void drawVerticalLine(int x, int y, int length){
+    if(length=0){
+      return;
+    }
+
+    do Screen.drawLine(x, y, x, y+length-1); 
+    return; 
+  }
+
+  function void drawHorizontalLine(int x, int y, int length){
+    if(length=0){
+      return;
+    }
+
+    do Screen.drawLine(x, y, x+length-1, y); 
+    return; 
+  }
+
+
+
+  function void debug(String name, int value) {
+    var String  equal;
+    let equal = String.new(1);
+    do equal.appendChar(61);   //'='
+    do Output.printString(name);
+    do Output.printString(equal);
+    do Output.printInt(value);
+    do Output.println();
+     
+    do name.dispose();
+    do equal.dispose();
+    return;
+  }
+
+
+
+  // 不可用
+  function void drawLine(int x1, int y1, int x2, int y2, int stroke) {
+  	var int w, dy, dx, d, xx1, yy1, xx2, yy2;
+
+  	let w=0;
+  	let dy = y2-y1;
+  	let dx = x2-x1;
+  	//do Output.printInt(dy);
+//
+  	//do Output.printString(" ");
+  	//do Output.printInt(dx);
+//
+  	//do Output.printString(" ");
+  	//do Output.printInt(dy*dy);
+//
+  	//do Output.printString(" ");
+  	//do Output.printInt(dx*dx);
+//
+  	//do Output.printString(" ");
+  	//do Output.printInt((dy*dy) + (dx*dx));
+
+  	let d= Math.sqrt((dy*dy) + (dx*dx));
+
+  	do Screen.setColor(true);
+  	do Screen.drawLine(x1, y1, x2, y2);
+  	while( w < stroke) {
+  		let xx1 = w * dy / d + x1;
+  		let yy1 = w * dx / d + y1;
+
+  		let xx2 = w * dy / d + x2;
+  		let yy2 = w * dx / d + y2;
+
+  		do Screen.drawLine(xx1, yy1, xx2, yy2);
+  		let w=w+1;
+  	}
+
+  	return;
+  	
+  }
+}
