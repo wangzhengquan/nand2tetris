@@ -9,6 +9,7 @@ build/
 *.out
 *.test
 *.zip
+tools/bin/*.dat
 
 projects/04/**/*.hack
 projects/06/**/*.hack
