@@ -20,15 +20,17 @@ class Output {
     static Array charMaps; 
     static boolean showCursor;
 
-    static int row, col, rows, cols, baseAddr;
+    static int cursorRow, cursorCol, screenHeight, screenWidth;
+
+    static Array screen;
      
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
-      let row = 0;
-      let col = 0; 
-      let rows = 23;
-      let cols = 64;
-      let baseAddr = 16384;
+      let cursorRow = 0;
+      let cursorCol = 0; 
+      let screenHeight = 256/11;
+      let screenWidth = 512/8;
+      let screen = 16384;
       let showCursor = false;
       do Output.initMap();
       return;
@@ -187,8 +189,8 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
-      let row = i;
-      let col = j;
+      let cursorRow = i;
+      let cursorCol = j;
       return;
     }
 
@@ -198,11 +200,11 @@ class Output {
       var int address, value, x, y, q, r, i;
       var Array map ;
       let map= Output.getMap(c);
-      let x = col * 8;
-      let q = x/16;
-      let r = x - (q*16);
-      let y = row*11;
-      let address = baseAddr+ (32*y) + q;
+      // one char take 8bits width, 11bits height
+      let x = cursorCol/2;
+      let r = cursorCol & 1;
+      let y = cursorRow*11;
+      let address =  32*y + x;
       let i=0;
       // erase the previouse character or cursor at this position
       do Output.printCursor(false);
@@ -210,10 +212,10 @@ class Output {
       // print new character
       while(i < 11){
         let value =  map[i] ;
-        if(~(r=0)){
-         let value = value * 256 | Memory.peek(address) ;
-        }  
-        do Memory.poke(address, value);
+        if(r=1){
+         let value = value * 256 | screen[address] ;
+        } 
+        let screen[address] = value;
         let address = address + 32;
         let i= i+1;
       }
@@ -268,13 +270,13 @@ class Output {
 
 
     function void advance() {
-      let col=col+1;
-      if(col=cols){
-        let col = 0;
-        let row = row+1;
+      let cursorCol=cursorCol+1;
+      if(cursorCol=screenWidth){
+        let cursorCol = 0;
+        let cursorRow = cursorRow+1;
       }
-      if(row = rows){
-        let row = 0;
+      if(cursorRow = screenHeight){
+        let cursorRow = 0;
       }
       return;
     }
@@ -290,39 +292,23 @@ class Output {
     }
 
     function void moveToNextRow() {
-      let col = 0;
-      let row = row + 1;
-      if(row = rows){
-        let row = 0;
+      let cursorCol = 0;
+      let cursorRow = cursorRow + 1;
+      if(cursorRow = screenHeight){
+        let cursorRow = 0;
       }
       return;
     }
 
     function void back() {  
-      if(col=0){
-        let col = cols-1;
-        let row = row-1;
+      if(cursorCol=0){
+        let cursorCol = cursorCol-1;
+        let cursorRow = cursorRow-1;
       } else{
-        let col=col-1;
+        let cursorCol=cursorCol-1;
       }
        
       return;
-    }
-
-    function int row(){
-      return row;
-    }
-
-    function int col(){
-      return col;
-    }
-
-    function int rows(){
-      return rows;
-    }
-
-    function int cols(){
-      return cols;
     }
 
     function void erase() {
@@ -333,28 +319,27 @@ class Output {
     
     function void printCursor(boolean color){
       var int address, value, x, y, q, r, i;
-      let x = col * 8;
-      let q = x/16;
-      let r = x - (q*16);
-      let y = row*11;
-      let address = baseAddr+ (32*y) + q;
+      let x = cursorCol / 2;
+      let r = cursorCol & 1;
+      let y = cursorRow*11;
+      let address = 32*y + x;
       let i=0;
       do Screen.setColor(color);
 
       while(i < 11){
         if(color){
           let value =  126 ;
-          if(~(r=0)){
-            let value = value * 256 | Memory.peek(address)  ;
+          if(r=1){
+            let value = value * 256 | screen[address]  ;
           } 
         } else {
           let value =  0 ;
-          if(~(r=0)){
-            let value =  255 & Memory.peek(address)  ;
+          if(r=1){
+            let value =  255 & screen[address]  ;
           } 
         }
          
-        do Memory.poke(address, value);
+        let screen[address]=  value;
         let address = address + 32;
         let i= i+1;
       }
