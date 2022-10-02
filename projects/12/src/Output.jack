@@ -197,7 +197,7 @@ class Output {
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
-      var int address, value, x, y, q, r, i;
+      var int address, bitmap, x, y, q, r, i;
       var Array map ;
       let map= Output.getMap(c);
       // one char take 8bits width, 11bits height
@@ -211,11 +211,11 @@ class Output {
 
       // print new character
       while(i < 11){
-        let value =  map[i] ;
+        let bitmap =  map[i] ;
         if(r=1){
-         let value = value * 256 | screen[address] ;
+         let bitmap = bitmap * 256 | screen[address] ;
         } 
-        let screen[address] = value;
+        let screen[address] = bitmap;
         let address = address + 32;
         let i= i+1;
       }

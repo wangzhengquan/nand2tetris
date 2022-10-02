@@ -17,23 +17,22 @@ class String {
     field int length;
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
-    constructor String new(int capacity) {
-
-      if(capacity = 0){
-        let capacity = 1;
+    constructor String new(int cap) {
+      if(cap = 0){
+        let cap = 1;
       }
-
+      let capacity = cap;
      // let data = Array.new(capacity);
-      let data =  Memory.alloc(capacity);
       let length = 0;
-      // do Output.printInt(123);
-      // do Output.println();
+      let data =  Memory.alloc(capacity);
+      //  do Memory.poke(2060, data);
       return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
       do data.dispose();
+      // do Memory.free(data);
       return;
     }
 
@@ -55,14 +54,21 @@ class String {
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
-      // if(length=capacity){
-      //   capacity = capacity + capacity;
-      //   Memory.realloc(capacity);
-      // }
-
+      if(length = capacity){
+        let capacity = capacity + capacity;
+        let data = Memory.realloc(data, capacity);
+      }
       let data[length]=c;
       let length = length + 1;
       return this;
+    }
+    
+    method Array charArray() {
+      return data;
+    }
+
+    method int capacity() {
+      return capacity;
     }
 
     /** Erases the last character from this string. */

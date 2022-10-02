@@ -73,7 +73,7 @@ class Keyboard {
     function String readLine(String message) {
       var String str;
       var char c;
-      let str = String.new(64);
+      let str = String.new(4);
       do Output.printString(message);
       
       let c = Keyboard.readChar();

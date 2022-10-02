@@ -72,7 +72,7 @@ class Memory {
   /** Finds an available RAM block of the given size and returns
     *  a reference to its base address. */
   function int alloc(int size) {
-    var int newsize, block;
+    var int newsize, index;
     /* Ignore spurious requests */
     if (size = 0){
       return 0;
@@ -89,22 +89,22 @@ class Memory {
     * and to satisfy the  alignment requirement. 
     */
     let newsize = size +  3 ;
-    let block = Memory.findFit(newsize);
+    let index = Memory.findFit(newsize);
     /* Search the free list for a fit */
-    if (~(block=0))
+    if (~(index=0))
     {
-      return heapStart + Memory.place(block, newsize);
+      return heapStart + Memory.place(index, newsize);
     } else{
-      do Output.printString("alloc error, can not find a fit block");
-      do Output.println();
+      do Sys.error(100);
+      
       return 0;
     }
   }
-
+ 
   /** De-allocates the given object (cast as an array) by making
     *  it available for future allocations. */
   function void deAlloc(int pt) {
-    var int block, size;
+    var int index, size;
     if (pt = 0){
       return;
     }
@@ -114,32 +114,84 @@ class Memory {
     *  return;
     *}
     */
-    let block = pt - heapStart;
-    do Memory.setBlockAlloc(block, false);
-    do Memory.coalesce(block);
+    let index = pt - heapStart;
+    do Memory.setBlockAlloc(index, false);
+    do Memory.coalesce(index);
     return;
   } 
 
-  function int place(int block, int size){
+
+  function in realloc(int ptr, int size)
+  {
+    var int oldsize;
+    var int newptr;
+
+    /* If size == 0 then this is just free, and we return NULL. */
+    if (size = 0)
+    {
+      do Memory.deAlloc(ptr);
+      return 0;
+    }
+
+    /* If oldptr is NULL, then this is just malloc. */
+    if (ptr = 0)
+    {
+      return Memory.alloc(size);
+    }
+
+    let newptr = Memory.alloc(size);
+
+    /* If realloc() fails the original block is left untouched  */
+    if (newptr=0)
+    {
+      return 0;
+    }
+
+    /* Copy the old data. */
+    let oldsize = Memory.getBlockSize(ptr - heapStart) - 3;
+    if (size < oldsize) {
+      let oldsize = size;
+    }
+    do Memory.cpy(newptr, ptr, oldsize);
+
+    /* Free the old block. */
+    do Memory.deAlloc(ptr);
+
+    return newptr;
+  }
+
+  function void cpy(int newptr, int oldptr, int size){
+    var int newIndex, oldIndex;
+    var int i;
+    let newIndex = newptr-heapStart;
+    let oldIndex = oldptr-heapStart;
+    while(i<size){
+      let heap[newIndex+i] = heap[oldIndex+i];
+      let i=i+1;
+    }
+    return;
+  }
+
+   // ==================================private============================================ 
+
+  function int place(int index, int size){
     var int csize ;
-    let csize = Memory.getBlockSize(block);
+    let csize = Memory.getBlockSize(index);
     if ((csize - size) < MIN_BLOCK_SIZE )
     {
-      do Memory.setBlockHeaderFooter(block, csize , true);
-      do Memory.rmFblock(block);
+      do Memory.setBlockHeaderFooter(index, csize , true);
+      do Memory.rmFblock(index);
     } else {
-      do Memory.setBlockHeaderFooter(block, csize - size, false);
-      let block = Memory.nextBlock(block);
-      do Memory.setBlockHeaderFooter(block, size, true);
+      do Memory.setBlockHeaderFooter(index, csize - size, false);
+      let index = Memory.nextBlock(index);
+      do Memory.setBlockHeaderFooter(index, size, true);
     }
-    return block;
+    return index;
   }
     
 
   function int findFit(int size){
     var int block;
-    // do Output.printInt(size);
-    // do Output.println();
     let block = Memory.successorBlock(prologue);
     while(~(block=prologue)){
       if( (size < Memory.getBlockSize(block)) | (size = Memory.getBlockSize(block)) ){
@@ -181,22 +233,22 @@ class Memory {
     return block - heap[block-3];
   }
 
-  function void setSuccessorBlock(int block, int succ){
-    let heap[block+1] = succ;
+  function void setSuccessorBlock(int index, int succ){
+    let heap[index+1] = succ;
     return;
   }
 
-  function void setPredecessorBlock(int block, int pre){
-    let heap[block] = pre;
+  function void setPredecessorBlock(int index, int pre){
+    let heap[index] = pre;
     return;
   }
 
-  function int successorBlock(int block){
-    return heap[block+1] ;
+  function int successorBlock(int index){
+    return heap[index+1] ;
   }
 
-  function int predecessorBlock(int block){
-    return heap[block] ;
+  function int predecessorBlock(int index){
+    return heap[index] ;
   }
 
 
@@ -273,7 +325,7 @@ class Memory {
     return;
   }
 
-  // ==============================================================================
+  // ==================================check============================================
   function void checkPrologue () {
     
     do Output.printInt( (heap[0]=MIN_BLOCK_SIZE)) ;

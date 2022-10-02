@@ -8,19 +8,37 @@ class Main {
   }
 
 
-  function void test() {
-    var boolean b;
-    let b = 2;
-    if(b){
-      do Output.printString("true");
-    } else {
-      do Output.printString("false");
-    }
-    return;
+  function void testString() {
+   var String str;
+   var Array data;
+  //  let str = String.new(2);
+  //  let data = str.charArray();
+  //  do str.appendChar(65);
+  //  do str.appendChar(66);
+  //  do Output.printInt(data);
+  //  do Output.println();
+
+   let str = String.new(2);
+   let data = str.charArray();
+   do str.appendChar(65);
+   do str.appendChar(66);
+  //  do str.appendChar(67);
+  //  do str.appendChar(68);
+  //  do str.appendChar(69);
+  //  do str.appendChar(70);
+ 
+   
+   do Output.printInt(data);
+   do Output.println();
+   do Output.printString(str);
+
+   
+   return;
   }
 
   function void testKeyboard() {
     var String str;
+    
     while(true){
       let str= Keyboard.readLine("hello:");
       do Output.printString("echo :");
@@ -119,6 +137,22 @@ class Main {
     do Output.printInt(a);
     do Memory.deAlloc(a);
     do Output.printString("hello");
+    return;
+  }
+
+  function void checkRealloc() {
+    var Array arr;
+    let arr = Memory.alloc(10);
+    let arr[0]=1;
+    let arr[1]=2;
+    let arr[2]=3;
+    // do Output.printInt(arr[0]);
+    // do Output.printInt(arr[1]);
+    // do Output.printInt(arr[2]);
+    let arr = Memory.realloc(arr, 20);
+    do Output.printInt(arr[0]);
+    do Output.printInt(arr[1]);
+    do Output.printInt(arr[2]);
     return;
   }
 
