@@ -12,7 +12,7 @@ class Memory {
 
   static Array heap;
   // static int ALIGNMENT;
-  static int heapStart;
+  static int heapStart, heapEnd;
   static int HEAP_LENGTH;
   static int prologue, epilogue;
   static int MIN_BLOCK_SIZE;
@@ -26,6 +26,7 @@ class Memory {
 
     let heapStart = 2048;
     let HEAP_LENGTH = 14336;
+    let heapEnd = 16383;
 
     //prologue
     let prologue = 2;
@@ -72,7 +73,7 @@ class Memory {
   /** Finds an available RAM block of the given size and returns
     *  a reference to its base address. */
   function int alloc(int size) {
-    var int newsize, index;
+    var int newsize, index, ptr;
     /* Ignore spurious requests */
     if (size = 0){
       return 0;
@@ -93,7 +94,12 @@ class Memory {
     /* Search the free list for a fit */
     if (~(index=0))
     {
-      return heapStart + Memory.place(index, newsize);
+      let ptr =  heapStart + Memory.place(index, newsize);
+      if(ptr < heapStart | ptr > heapEnd){
+        do Sys.error(100);
+        return 0;
+      }
+      return ptr;
     } else{
       do Sys.error(100);
       
@@ -233,24 +239,23 @@ class Memory {
     return block - heap[block-3];
   }
 
-  function void setSuccessorBlock(int index, int succ){
-    let heap[index+1] = succ;
-    return;
-  }
-
   function void setPredecessorBlock(int index, int pre){
     let heap[index] = pre;
     return;
   }
 
-  function int successorBlock(int index){
-    return heap[index+1] ;
+  function void setSuccessorBlock(int index, int succ){
+    let heap[index+1] = succ;
+    return;
   }
 
   function int predecessorBlock(int index){
     return heap[index] ;
   }
 
+  function int successorBlock(int index){
+    return heap[index+1] ;
+  }
 
   function int coalesce(int block){
     var int preBlock, nextBlock, size;
@@ -358,15 +363,18 @@ class Memory {
   }
 
   function void checkFreeLinkList() {
-    var int block;
-    // do Output.printInt(size);
-    // do Output.println();
-    let block = Memory.successorBlock(prologue);
-    while(~(block=prologue)){
-      do Output.printInt(block);
+    var int index;
+    do Output.printInt(prologue);
+    do Output.println();
+    let index = Memory.successorBlock(prologue);
+    while(~(index=prologue)){
+      do Output.printInt(index);
       do Output.println();
-      let block = Memory.successorBlock(block);
+      // do Output.printInt(Memory.predecessorBlock(index));
+      // do Output.println();
+      let index = Memory.successorBlock(index);
     }
+    // do Memory.poke(2060, index);
     return;
   }
 

@@ -7,26 +7,27 @@ class Main {
     return;
   }
 
+  function void test() {
+    var Array data;
+    
+    let data = 0;
+    let data[6]= 1;
+   do Sys.error(99);
+    return;
+  }
+
 
   function void testString() {
    var String str;
    var Array data;
-  //  let str = String.new(2);
-  //  let data = str.charArray();
-  //  do str.appendChar(65);
-  //  do str.appendChar(66);
-  //  do Output.printInt(data);
-  //  do Output.println();
-
    let str = String.new(2);
    let data = str.charArray();
    do str.appendChar(65);
    do str.appendChar(66);
-  //  do str.appendChar(67);
-  //  do str.appendChar(68);
-  //  do str.appendChar(69);
-  //  do str.appendChar(70);
- 
+   do str.appendChar(67);
+   do str.appendChar(68);
+   do str.appendChar(69);
+   do str.appendChar(70);
    
    do Output.printInt(data);
    do Output.println();

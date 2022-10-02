@@ -43,6 +43,8 @@ class String {
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+      // do Memory.poke(2060, data);
+      // do Memory.poke(2061, j);
       return data[j];
     }
 
