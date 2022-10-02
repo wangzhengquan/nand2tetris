@@ -25,14 +25,12 @@ class String {
      // let data = Array.new(capacity);
       let length = 0;
       let data =  Memory.alloc(capacity);
-      //  do Memory.poke(2060, data);
       return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
       do data.dispose();
-      // do Memory.free(data);
       return;
     }
 
@@ -43,8 +41,6 @@ class String {
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
-      // do Memory.poke(2060, data);
-      // do Memory.poke(2061, j);
       return data[j];
     }
 
@@ -145,10 +141,6 @@ class String {
       do str.setInt(val);
       return str;
     }
-
-    // function in mod(int a, int m) {
-    //   return a - (m * (a / m)); // r
-    // }
 
     /** Returns the new line character. */
     function char newLine() {
